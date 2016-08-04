@@ -1,0 +1,29 @@
+# depslib dependency file v1.0
+1470026310 source:/home/rudy/Escritorio/TablaHash/[MIA]Fase1_201403999/main.c
+	<stdio.h>
+	<stdlib.h>
+	"AdminDisco.h"
+
+1470031271 /home/rudy/Escritorio/TablaHash/[MIA]Fase1_201403999/AdminDisco.h
+	<sys/types.h>
+	<sys/stat.h>
+	<unistd.h>
+	<string.h>
+	<stdio.h>
+	<time.h>
+	<stdlib.h>
+
+1470176316 source:/home/rudy/Escritorio/Menejo de Archivos/[MIA]Fase1_201403999/main.c
+	<stdio.h>
+	<stdlib.h>
+	"AdminDisco.h"
+
+1470185361 /home/rudy/Escritorio/Menejo de Archivos/[MIA]Fase1_201403999/AdminDisco.h
+	<sys/types.h>
+	<sys/stat.h>
+	<unistd.h>
+	<string.h>
+	<stdio.h>
+	<time.h>
+	<stdlib.h>
+
