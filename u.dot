@@ -1,0 +1,9 @@
+digraph i{
+node [shape=plaintext]
+    a [label=<<table border="0" cellborder="1" cellspacing="0">
+                           <tr><td width="70%"><b>Rudy Rene Cojulun Melchor</b></td><td width="70%"><b>title2</b></td></tr>
+                           <tr><td width="70%">row 1</td><td width="70%"><b>2</b></td></tr>
+                           <tr><td width="70%">row 2</td><td width="70%"><b>3</b></td></tr>
+              </table>>];
+}
+
