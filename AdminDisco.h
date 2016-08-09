@@ -1,8 +1,5 @@
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
-#include <string.h>
-#include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
 
@@ -437,12 +434,19 @@ int fdisk_add(int add, char unit, char *path, char *name)
             }
         }
         //si se desea eliminar espacio de la particion
-        else{
-            if((mbr.particion1.tamanio+tamanio)>0){
+        else
+        {
+            if((mbr.particion1.tamanio+tamanio)>0)
+            {
                 printf("Se tratara de reducir el espacio de la particion\n");
-
+                mbr.particion1.tamanio=mbr.particion1.tamanio+tamanio;
+                fseek(archivo, 0, SEEK_SET);
+                fwrite(&mbr, sizeof_mbr, 1, archivo);
+                fclose(archivo);
+                return 1;
             }
-            else{
+            else
+            {
                 printf("Error: el espacio es insuficiente en la particion como para realizar la reduccion de espacio solicitada\n");
                 fclose(archivo);
                 return 1;
@@ -457,17 +461,39 @@ int fdisk_add(int add, char unit, char *path, char *name)
         //si el tamanio calculado es positivo se va a agregar espacio a la particion
         if(tamanio>0)
         {
-            proxima=proximaPosicion(mbr,mbr.particion1.comienzo);
+            proxima=proximaPosicion(mbr,mbr.particion2.comienzo);
             //si es que existe un espacio vacio despues de la particion
-            if(proxima!=(mbr.particion1.comienzo+mbr.particion1.tamanio))
+            if(proxima!=(mbr.particion2.comienzo+mbr.particion2.tamanio))
             {
                 printf("Si se encontro espacio vacio despues de la particion para que sea agregado\n");
-
+                mbr.particion2.tamanio=mbr.particion2.tamanio+tamanio;
+                fseek(archivo, 0, SEEK_SET);
+                fwrite(&mbr, sizeof_mbr, 1, archivo);
+                fclose(archivo);
                 return 1;
             }
             else
             {
                 printf("No se encuentra espacio vacio despues de la particion para que sea agregado\n");
+                return 1;
+            }
+        }
+        //si se desea eliminar espacio de la particion
+        else
+        {
+            if((mbr.particion2.tamanio+tamanio)>0)
+            {
+                printf("Se tratara de reducir el espacio de la particion\n");
+                mbr.particion2.tamanio=mbr.particion2.tamanio+tamanio;
+                fseek(archivo, 0, SEEK_SET);
+                fwrite(&mbr, sizeof_mbr, 1, archivo);
+                fclose(archivo);
+                return 1;
+            }
+            else
+            {
+                printf("Error: el espacio es insuficiente en la particion como para realizar la reduccion de espacio solicitada\n");
+                fclose(archivo);
                 return 1;
             }
 
@@ -477,22 +503,42 @@ int fdisk_add(int add, char unit, char *path, char *name)
     //por si se desea eliminar la particion que ocupa la tercera posicion
     if(strcmp(name,mbr.particion3.nombre)==0 && strcmp(mbr.particion3.status, "a")==0)
     {
-        //numero que obtiene el siguiente espacio ocupado
-        int proxima;
         //si el tamanio calculado es positivo se va a agregar espacio a la particion
         if(tamanio>0)
         {
-            proxima=proximaPosicion(mbr,mbr.particion1.comienzo);
+            proxima=proximaPosicion(mbr,mbr.particion3.comienzo);
             //si es que existe un espacio vacio despues de la particion
-            if(proxima!=(mbr.particion1.comienzo+mbr.particion1.tamanio))
+            if(proxima!=(mbr.particion3.comienzo+mbr.particion3.tamanio))
             {
                 printf("Si se encontro espacio vacio despues de la particion para que sea agregado\n");
-
+                mbr.particion3.tamanio=mbr.particion3.tamanio+tamanio;
+                fseek(archivo, 0, SEEK_SET);
+                fwrite(&mbr, sizeof_mbr, 1, archivo);
+                fclose(archivo);
                 return 1;
             }
             else
             {
                 printf("No se encuentra espacio vacio despues de la particion para que sea agregado\n");
+                return 1;
+            }
+        }
+        //si se desea eliminar espacio de la particion
+        else
+        {
+            if((mbr.particion3.tamanio+tamanio)>0)
+            {
+                printf("Se tratara de reducir el espacio de la particion\n");
+                mbr.particion3.tamanio=mbr.particion3.tamanio+tamanio;
+                fseek(archivo, 0, SEEK_SET);
+                fwrite(&mbr, sizeof_mbr, 1, archivo);
+                fclose(archivo);
+                return 1;
+            }
+            else
+            {
+                printf("Error: el espacio es insuficiente en la particion como para realizar la reduccion de espacio solicitada\n");
+                fclose(archivo);
                 return 1;
             }
 
@@ -502,7 +548,46 @@ int fdisk_add(int add, char unit, char *path, char *name)
     //por si se desea eliminar la particion que ocupa la cuarta posicion
     if(strcmp(name,mbr.particion4.nombre)==0 && strcmp(mbr.particion4.status, "a")==0)
     {
-        //**
+        //si el tamanio calculado es positivo se va a agregar espacio a la particion
+        if(tamanio>0)
+        {
+            proxima=proximaPosicion(mbr,mbr.particion4.comienzo);
+            //si es que existe un espacio vacio despues de la particion
+            if(proxima!=(mbr.particion4.comienzo+mbr.particion4.tamanio))
+            {
+                printf("Si se encontro espacio vacio despues de la particion para que sea agregado\n");
+                mbr.particion4.tamanio=mbr.particion4.tamanio+tamanio;
+                fseek(archivo, 0, SEEK_SET);
+                fwrite(&mbr, sizeof_mbr, 1, archivo);
+                fclose(archivo);
+                return 1;
+            }
+            else
+            {
+                printf("No se encuentra espacio vacio despues de la particion para que sea agregado\n");
+                return 1;
+            }
+        }
+        //si se desea eliminar espacio de la particion
+        else
+        {
+            if((mbr.particion4.tamanio+tamanio)>0)
+            {
+                printf("Se tratara de reducir el espacio de la particion\n");
+                mbr.particion4.tamanio=mbr.particion4.tamanio+tamanio;
+                fseek(archivo, 0, SEEK_SET);
+                fwrite(&mbr, sizeof_mbr, 1, archivo);
+                fclose(archivo);
+                return 1;
+            }
+            else
+            {
+                printf("Error: el espacio es insuficiente en la particion como para realizar la reduccion de espacio solicitada\n");
+                fclose(archivo);
+                return 1;
+            }
+
+        }
     }
 
     //si no encontro ninguna coincidencia anterior va a buscar si la particion que se desea eliminar es de tipo logica
@@ -537,10 +622,46 @@ int fdisk_add(int add, char unit, char *path, char *name)
     //si viene al inicio de la lista de ebr
     if(strcmp(ebr.nombre, name)==0 && strcmp(ebr.status, "a")==0)
     {
-        //int proxima=pro;
-        //si el tamanio es positivo
+        //si el tamanio calculado es positivo se va a agregar espacio a la particion
+        if(tamanio>0)
+        {
+            proxima=ebr.siguiente;
+            //si es que existe un espacio vacio despues de la particion
+            if(proxima!=(ebr.comienzo+ebr.tamanio+sizeof_ebr))
+            {
+                printf("Si se encontro espacio vacio despues de la particion para que sea agregado\n");
+                ebr.tamanio=ebr.tamanio+tamanio;
+                fseek(archivo, ebr.comienzo, SEEK_SET);
+                fwrite(&ebr, sizeof_ebr, 1, archivo);
+                fclose(archivo);
+                return 1;
+            }
+            else
+            {
+                printf("No se encuentra espacio vacio despues de la particion para que sea agregado\n");
+                return 1;
+            }
+        }
+        //si se desea eliminar espacio de la particion
+        else
+        {
+            if((ebr.tamanio+tamanio)>0)
+            {
+                printf("Se tratara de reducir el espacio de la particion\n");
+                ebr.tamanio=ebr.tamanio+tamanio;
+                fseek(archivo, ebr.comienzo, SEEK_SET);
+                fwrite(&ebr, sizeof_ebr, 1, archivo);
+                fclose(archivo);
+                return 1;
+            }
+            else
+            {
+                printf("Error: el espacio es insuficiente en la particion como para realizar la reduccion de espacio solicitada\n");
+                fclose(archivo);
+                return 1;
+            }
 
-
+        }
         fclose(archivo);
         return 1;
     }
@@ -552,21 +673,60 @@ int fdisk_add(int add, char unit, char *path, char *name)
     {
         while(1==1)
         {
-
+            EBR ebr;
             fseek(archivo, inicio, SEEK_SET);
             fread(&ebr, sizeof_ebr, 1, archivo);
             if(strcmp(ebr.nombre, name)==0 && strcmp(ebr.status, "a")==0)
             {
+                //si el tamanio calculado es positivo se va a agregar espacio a la particion
+                if(tamanio>0)
+                {
+                    proxima=ebr.siguiente;
+                    //si es que existe un espacio vacio despues de la particion
+                    if(proxima!=(ebr.comienzo+ebr.tamanio+sizeof_ebr))
+                    {
+                        printf("Si se encontro espacio vacio despues de la particion para que sea agregado\n");
+                        ebr.tamanio=ebr.tamanio+tamanio;
+                        fseek(archivo, ebr.comienzo, SEEK_SET);
+                        fwrite(&ebr, sizeof_ebr, 1, archivo);
+                        fclose(archivo);
+                        return 1;
+                    }
+                    else
+                    {
+                        printf("No se encuentra espacio vacio despues de la particion para que sea agregado\n");
+                        return 1;
+                    }
+                }
+                //si se desea eliminar espacio de la particion
+                else
+                {
+                    if((ebr.tamanio+tamanio)>0)
+                    {
+                        printf("Se tratara de reducir el espacio de la particion\n");
+                        ebr.tamanio=ebr.tamanio+tamanio;
+                        fseek(archivo, ebr.comienzo, SEEK_SET);
+                        fwrite(&ebr, sizeof_ebr, 1, archivo);
+                        fclose(archivo);
+                        return 1;
+                    }
+                    else
+                    {
+                        printf("Error: el espacio es insuficiente en la particion como para realizar la reduccion de espacio solicitada\n");
+                        fclose(archivo);
+                        return 1;
+                    }
 
-
-            }
-            if(ebr.siguiente==0)
-            {
-                printf("No se encontro la particion que se desea eliminar\n");
+                }
                 fclose(archivo);
                 return 1;
             }
             inicio=ebr.siguiente;
+            if(inicio==0){
+                printf("Error: No se encuentra la particion deseada\n");
+                fclose(archivo);
+                return 1;
+            }
         }
     }
     else
@@ -647,6 +807,7 @@ int primerEspacioVacio(struct MBR mbr)
     return respuesta;
 }
 
+
 int imprimir()
 {
 
@@ -682,14 +843,15 @@ int imprimir()
 
     if(inicio==0)
     {
-        fclose(archivo);
-        printf("Error: No se encontro la particion a editar\n");
+        /*fclose(archivo);
+        printf("Error: No se encontro la particion a editar\n");*/
         return 1;
     }
 
     EBR ebr;
     fseek(archivo, inicio, SEEK_SET);
     fread(&ebr, sizeof_ebr, 1, archivo);
+    printf("***Nueva particion logica***\n-Ajuste: %s\n-Comienzo: %d\n-Nombre: %s\n-Siguiente: %d\n-Status: %s\n-Tamanio: %d\n",ebr.ajuste,ebr.comienzo,ebr.nombre,ebr.siguiente,ebr.status,ebr.tamanio);
 
     inicio=ebr.siguiente;
 
@@ -772,7 +934,6 @@ int proximaPosicion(struct MBR mbr, int indice)
 
 
 int fdisk_eliminar(char *path, char *name, char *delete)
-
 {
     MBR mbr;
     FILE *archivo;
@@ -781,7 +942,7 @@ int fdisk_eliminar(char *path, char *name, char *delete)
     fread(&mbr, sizeof_mbr, 1, archivo);
 
     //por si se desea eliminar la particion que ocupa la primera posicion
-    if(strcmp(name,mbr.particion1.nombre)==0 && strcmp(mbr.particion3.status, "a")==0)
+    if(strcmp(name,mbr.particion1.nombre)==0 && strcmp(mbr.particion1.status, "a")==0)
     {
         if(strcmp(delete, "Fast")==0 || strcmp(delete, "Full")==0)
         {
@@ -1031,6 +1192,112 @@ int fdisk_eliminar(char *path, char *name, char *delete)
     }
     fclose(archivo);
 }
+
+
+int fdisk_buscar(char *path, char *name)
+{
+    MBR mbr;
+    FILE *archivo;
+    archivo = fopen(path, "rb+");
+    fseek(archivo, 0, SEEK_SET);
+    fread(&mbr, sizeof_mbr, 1, archivo);
+
+    //por si se desea eliminar la particion que ocupa la primera posicion
+    if(strcmp(name,mbr.particion1.nombre)==0 && strcmp(mbr.particion1.status, "a")==0)
+    {
+    fclose(archivo);
+        return 1;
+    }
+
+    //por si se desea eliminar la particion que ocupa la segunda posicion
+    if(strcmp(name,mbr.particion2.nombre)==0 && strcmp(mbr.particion2.status, "a")==0)
+    {
+    fclose(archivo);
+        return 1;
+    }
+
+    //por si se desea eliminar la particion que ocupa la tercera posicion
+    if(strcmp(name,mbr.particion3.nombre)==0 && strcmp(mbr.particion3.status, "a")==0)
+    {
+    fclose(archivo);
+        return 1;
+    }
+
+    //por si se desea eliminar la particion que ocupa la cuarta posicion
+    if(strcmp(name,mbr.particion4.nombre)==0 && strcmp(mbr.particion4.status, "a")==0)
+    {
+    fclose(archivo);
+        return 1;
+    }
+
+    //si no encontro ninguna coincidencia anterior va a buscar si la particion que se desea eliminar es de tipo logica
+    int inicio;
+    if(strcmp(mbr.particion1.tipo, "E")==0)
+    {
+        inicio=mbr.particion1.comienzo;
+    }
+    else if(strcmp(mbr.particion2.tipo, "E")==0)
+    {
+        inicio=mbr.particion2.comienzo;
+    }
+    else if(strcmp(mbr.particion3.tipo, "E")==0)
+    {
+        inicio=mbr.particion3.comienzo;
+    }
+    else if(strcmp(mbr.particion4.tipo, "E")==0)
+    {
+        inicio=mbr.particion4.comienzo;
+    }
+
+    if(inicio==0)
+    {
+        fclose(archivo);
+        return 0;
+    }
+
+    EBR ebr;
+    fseek(archivo, inicio, SEEK_SET);
+    fread(&ebr, sizeof_ebr, 1, archivo);
+    //si viene al inicio de la lista de ebr
+    if(strcmp(ebr.nombre, name)==0 && strcmp(ebr.status, "a")==0)
+    {
+        fclose(archivo);
+        return 1;
+    }
+
+    //de lo contrario se entiende que se encuentra dentro de la lista de ebr
+    inicio=ebr.siguiente;
+
+    if(ebr.siguiente!=0)
+    {
+        while(1==1)
+        {
+
+            fseek(archivo, inicio, SEEK_SET);
+            fread(&ebr, sizeof_ebr, 1, archivo);
+            if(strcmp(ebr.nombre, name)==0 && strcmp(ebr.status, "a")==0)
+            {
+
+                    fclose(archivo);
+                    return 1;
+
+            }
+            if(ebr.siguiente==0)
+            {
+                fclose(archivo);
+                return 0;
+            }
+            inicio=ebr.siguiente;
+        }
+    }
+    else
+    {
+        fclose(archivo);
+        return 0;
+    }
+    fclose(archivo);
+}
+
 
 
 reporteMbr()

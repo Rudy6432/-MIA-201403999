@@ -1,0 +1,7 @@
+digraph particiones{
+rankdir=TB;
+ node[shape = record];
+subgraph cluster{
+label="Reporte"nodeGrafica[label="MBR|{extendida|{EBR|Logica|EBR|Logica|EBR|Logica|EBR|Logica|}}|Vacio|Primaria|Primaria|Vacio|Primaria|Vacio"];
+	}
+}

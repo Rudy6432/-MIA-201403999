@@ -13,17 +13,20 @@
 	<time.h>
 	<stdlib.h>
 
-1470530239 source:/home/rudy/Escritorio/Menejo de Archivos/[MIA]Fase1_201403999/main.c
+1470710310 source:/home/rudy/Escritorio/Menejo de Archivos/[MIA]Fase1_201403999/main.c
 	<stdio.h>
 	<stdlib.h>
 	"AdminDisco.h"
+	"metodosCola.h"
 
-1470530294 /home/rudy/Escritorio/Menejo de Archivos/[MIA]Fase1_201403999/AdminDisco.h
+1470705319 /home/rudy/Escritorio/Menejo de Archivos/[MIA]Fase1_201403999/AdminDisco.h
 	<sys/types.h>
 	<sys/stat.h>
-	<unistd.h>
-	<string.h>
-	<stdio.h>
 	<time.h>
+	<stdlib.h>
+
+1470712885 /home/rudy/Escritorio/Menejo de Archivos/[MIA]Fase1_201403999/metodosCola.h
+	<stdlib.h>
+	<stdio.h>
 	<stdlib.h>
 
