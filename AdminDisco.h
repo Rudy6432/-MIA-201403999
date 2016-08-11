@@ -28,12 +28,12 @@ typedef struct MBR
 
 typedef struct EBR
 {
-    char status[10];
-    char ajuste[12];
+    char status[6];
+    char ajuste[6];
     int comienzo;
     int tamanio;
     int siguiente;
-    char nombre[26];
+    char nombre[20];
 } EBR;
 
 #define sizeof_mbr sizeof(MBR)
@@ -42,15 +42,16 @@ typedef struct EBR
 
 
 //////////////////PARTE PARA FUNCION MKDISK////////////////// 1era Funcion
-int mkdisk(int size, char unit, char *path, char *name)
+int mkdisk(int size, char *unit, char *path, char *name)
 {
-
+    printf("-->{%s}\n",unit);
     //codigo para crear la carpeta si no existe
     struct auxiliar;
     struct stat st = {0};
 
     if (stat(path, &st) == -1)
     {
+        printf("La carpeta destino no existe, se proseguira a crear una nueva\n");
         char *command="mkdir \"";
         char *comando = (char *) malloc(1 + strlen(command)+ strlen(path));
         strcpy(comando, command);
@@ -65,13 +66,28 @@ int mkdisk(int size, char unit, char *path, char *name)
     char fullpath [200];
     sprintf(fullpath,"%s%s", path, name);
     int tamanio;
-    if(unit=='m' || unit=='\0')
+
+    if(strcmp(unit,"M")==0 || strcmp(unit,"")==0)
     {
         tamanio = size*1024*1024;
     }
-    else if(unit=='k')
+
+    else if(strcmp(unit,"K")==0)
     {
         tamanio = size*1024;
+    }
+
+    else
+    {
+        printf("Error: La unidad del parametro size es incorrecta \n");
+        return 1;
+    }
+
+    //se verifica el tamaño del disco a crear
+    if(tamanio<10*1024*1024)
+    {
+        printf("Error: El tamanio del disco que se desea agregar deber ser mayor o igual a 10MB\n");
+        return 1;
     }
 
     //se verifica si el archivo ya existe
@@ -109,23 +125,28 @@ int mkdisk(int size, char unit, char *path, char *name)
     //parte para el numero identificador aleatorio
     srand (time(NULL));
     int numero = rand();
+    //todos los atributos que se asignaran al crearse a los atributos de tipo particion
     mbr.disk_signature=numero;
     mbr.particion1.comienzo=0;
     mbr.particion1.tamanio=0;
     strcpy(mbr.particion1.status,"i");
     strcpy(mbr.particion1.nombre,"");
+    strcpy(mbr.particion1.ajuste,"");
     mbr.particion2.comienzo=0;
     mbr.particion2.tamanio=0;
     strcpy(mbr.particion2.status,"i");
     strcpy(mbr.particion2.nombre,"");
+    strcpy(mbr.particion2.ajuste,"");
     mbr.particion3.comienzo=0;
     mbr.particion3.tamanio=0;
     strcpy(mbr.particion3.nombre,"");
     strcpy(mbr.particion3.status,"i");
+    strcpy(mbr.particion3.ajuste,"");
     mbr.particion4.comienzo=0;
     mbr.particion4.tamanio=0;
     strcpy(mbr.particion4.nombre,"");
     strcpy(mbr.particion4.status,"i");
+    strcpy(mbr.particion4.ajuste,"");
     //momento en el que se quiere almacenar el MBR del disco creado
     FILE *archivo;
     archivo = fopen(fullpath, "rb+");
@@ -139,7 +160,12 @@ int mkdisk(int size, char unit, char *path, char *name)
 //////////////////PARTE PARA FUNCION RMDISK////////////////// 2nda Funcion
 int rmdisk(char *path)
 {
-
+    struct stat st = {0};
+    if (stat(path, &st) == -1)
+    {
+        printf("Error: El disco no se encuentra en la direccion proporsionada\n");
+        return 1;
+    }
     remove(path);
     /*char comando[255];
     sprintf(comando,"rm \"%s\"", path);
@@ -148,34 +174,55 @@ int rmdisk(char *path)
 }
 
 
+
 //////////////////PARTE PARA FUNCION FDISK////////////////// 2nda Funcion
 
 
-int fdisk_agregar(int size, char unit, char *path, char type[1], char fit[2], char *name)
+int fdisk_agregar(int size, char *unit, char *path, char type[10], char fit[12], char *name)
 {
-    //de primero hay que verificar si es que la ruta ingresada es correcta y existe el disco
+    //Se va a verificar el tipo que se quiere almacenar
+    if(strcmp(type,"P")!=0 && strcmp(type,"E")!=0 && strcmp(type,"L")!=0){
+        printf("El atributo 'tipo' de la particion que se desea agregar es incorrecto\n");
+        return 1;
+    }
+
+    //se va a verificar el ajuste de la particion
+
+    if(strcmp(fit,"BF")!=0 && strcmp(fit,"FF")!=0 && strcmp(fit,"WF")!=0){
+        printf("El atributo 'tipo' de la particion que se desea agregar es incorrecto\n");
+        return 1;
+    }
+
+    //Se va a verificar si es que la ruta ingresada es correcta y existe el disco
     struct stat st = {0};
     if (stat(path, &st) == -1)
     {
         printf("Error: el disco al que se intenta acceder no se encuentra\n");
         return 1;
     }
+    //se obtiene el tamanio
     int tamanio;
-    if(unit=='B')
+    if(strcmp(unit,"B")==0)
     {
         tamanio=size;
     }
-    else if(unit=='K' || unit=='/0')
+    else if(strcmp(unit,"K")==0 || strcmp(unit,"")==0)
     {
         tamanio=size*1024;
     }
-    else if(unit=='M')
+    else if(strcmp(unit,"M")==0)
     {
         tamanio=size*1024*1024;
     }
     else
     {
-        printf("Error: tipo de unidad de almacenamiento incorrecta\n");
+        printf("Error: tipo de unidad de almacenamiento es incorrecta\n");
+        return 1;
+    }
+
+    //se verificara que el tamanio sea mayor de 2MB
+    if(tamanio<(2*1024*1024)){
+        printf("Error: El tamanio de la particion a crear debe ser mayor o igual a 2MB\n");
         return 1;
     }
 
@@ -312,7 +359,6 @@ int fdisk_agregar(int size, char unit, char *path, char type[1], char fit[2], ch
     int espacio=proximaPosicion(mbr, y)-y;
 
 
-
     if(espacio>tamanio)
     {
         printf("La unidad del disco posee espacio suficiente para el almacenamiento de la particion\n");
@@ -370,11 +416,287 @@ int fdisk_agregar(int size, char unit, char *path, char type[1], char fit[2], ch
     }
 }
 
-
-int fdisk_add(int add, char unit, char *path, char *name)
+int fdisk_eliminar(char *path, char *name, char *delete)
 {
-    //de primero hay que verificar si es que la ruta ingresada es correcta y existe el disco
     struct stat st = {0};
+    if (stat(path, &st) == -1)
+    {
+        printf("Error: El disco al que pertenece la particion que se desea eliminar no se encuentra\n");
+    }
+    MBR mbr;
+    FILE *archivo;
+    archivo = fopen(path, "rb+");
+    fseek(archivo, 0, SEEK_SET);
+    fread(&mbr, sizeof_mbr, 1, archivo);
+
+    //por si se desea eliminar la particion que ocupa la primera posicion
+    if(strcmp(name,mbr.particion1.nombre)==0 && strcmp(mbr.particion1.status, "a")==0)
+    {
+        if(strcmp(delete, "Fast")==0 || strcmp(delete, "Full")==0)
+        {
+            strcpy(mbr.particion1.status,"i");
+            fseek(archivo,0,SEEK_SET);
+            fwrite(&mbr, sizeof_mbr, 1, archivo);
+
+            if(strcmp(delete, "Full")==0)
+            {
+                char buffer[1];
+                int i=0;
+                fseek(archivo, mbr.particion1.comienzo,SEEK_SET);
+
+                for(i=0; i<(mbr.particion1.tamanio); i++)
+                {
+                    fwrite(&buffer,1,1,archivo);
+                }
+            }
+            fclose(archivo);
+            printf("Se ha eliminado exitosamente la particion\n");
+            return 1;
+        }
+        else
+        {
+            printf("Error: el tipo de formato de eliminacion no es el correcto\n");
+            fclose(archivo);
+            return 1;
+        }
+    }
+
+    //por si se desea eliminar la particion que ocupa la segunda posicion
+    if(strcmp(name,mbr.particion2.nombre)==0 && strcmp(mbr.particion2.status, "a")==0)
+    {
+        if(strcmp(delete, "Fast")==0 || strcmp(delete, "Full")==0)
+        {
+            strcpy(mbr.particion2.status,"i");
+            fseek(archivo,0,SEEK_SET);
+            fwrite(&mbr, sizeof_mbr, 1, archivo);
+
+            if(strcmp(delete, "Full")==0)
+            {
+                char buffer[1];
+                int i=0;
+                fseek(archivo, mbr.particion2.comienzo,SEEK_SET);
+
+                for(i=0; i<(mbr.particion2.tamanio); i++)
+                {
+                    fwrite(&buffer,1,1,archivo);
+                }
+            }
+            fclose(archivo);
+            printf("Se ha eliminado exitosamente la particion\n");
+            return 1;
+        }
+        else
+        {
+            printf("Error: el tipo de formato de eliminacion no es el correcto\n");
+            fclose(archivo);
+            return 1;
+        }
+    }
+
+    //por si se desea eliminar la particion que ocupa la tercera posicion
+    if(strcmp(name,mbr.particion3.nombre)==0 && strcmp(mbr.particion3.status, "a")==0)
+    {
+        if(strcmp(delete, "Fast")==0 || strcmp(delete, "Full")==0)
+        {
+            strcpy(mbr.particion3.status,"i");
+            fseek(archivo,0,SEEK_SET);
+            fwrite(&mbr, sizeof_mbr, 1, archivo);
+
+            if(strcmp(delete, "Full")==0)
+            {
+                char buffer[1];
+                int i=0;
+                fseek(archivo, mbr.particion3.comienzo,SEEK_SET);
+
+                for(i=0; i<(mbr.particion3.tamanio); i++)
+                {
+                    fwrite(&buffer,1,1,archivo);
+                }
+            }
+            fclose(archivo);
+            printf("Se ha eliminado exitosamente la particion\n");
+            return 1;
+        }
+        else
+        {
+            printf("Error: el tipo de formato de eliminacion no es el correcto\n");
+            fclose(archivo);
+            return 1;
+        }
+    }
+
+    //por si se desea eliminar la particion que ocupa la cuarta posicion
+    if(strcmp(name,mbr.particion4.nombre)==0 && strcmp(mbr.particion4.status, "a")==0)
+    {
+        if(strcmp(delete, "Fast")==0 || strcmp(delete, "Full")==0)
+        {
+            strcpy(mbr.particion4.status,"i");
+            fseek(archivo,0,SEEK_SET);
+            fwrite(&mbr, sizeof_mbr, 1, archivo);
+
+            if(strcmp(delete, "Full")==0)
+            {
+                char buffer[1];
+                int i=0;
+                fseek(archivo, mbr.particion4.comienzo,SEEK_SET);
+
+                for(i=0; i<(mbr.particion4.tamanio); i++)
+                {
+                    fwrite(&buffer,1,1,archivo);
+                }
+            }
+            fclose(archivo);
+            printf("Se ha eliminado exitosamente la particion\n");
+            return 1;
+        }
+        else
+        {
+            printf("Error: el tipo de formato de eliminacion no es el correcto\n");
+            fclose(archivo);
+            return 1;
+        }
+    }
+
+    //si no encontro ninguna coincidencia anterior va a buscar si la particion que se desea eliminar es de tipo logica
+    int inicio;
+    if(strcmp(mbr.particion1.tipo, "E")==0)
+    {
+        inicio=mbr.particion1.comienzo;
+    }
+    else if(strcmp(mbr.particion2.tipo, "E")==0)
+    {
+        inicio=mbr.particion2.comienzo;
+    }
+    else if(strcmp(mbr.particion3.tipo, "E")==0)
+    {
+        inicio=mbr.particion3.comienzo;
+    }
+    else if(strcmp(mbr.particion4.tipo, "E")==0)
+    {
+        inicio=mbr.particion4.comienzo;
+    }
+
+    if(inicio==0)
+    {
+        fclose(archivo);
+        printf("Error: No se encontro la particion a eliminar\n");
+        return 1;
+    }
+
+    EBR ebr;
+    fseek(archivo, inicio, SEEK_SET);
+    fread(&ebr, sizeof_ebr, 1, archivo);
+    //si viene al inicio de la lista de ebr
+    if(strcmp(ebr.nombre, name)==0 && strcmp(ebr.status, "a")==0)
+    {
+        printf("Se eliminara la primera particion logica del disco\n");
+        if(strcmp(delete, "Fast")==0 || strcmp(delete, "Full")==0)
+        {
+            strcpy(ebr.status,"i");
+            fseek(archivo, inicio, SEEK_SET);
+            fwrite(&ebr, sizeof_ebr, 1, archivo);
+
+            if(strcmp(delete, "Full")==0)
+            {
+                char buffer[1];
+                int i=0;
+                fseek(archivo, ebr.comienzo+sizeof_ebr,SEEK_SET);
+
+                for(i=0; i<(ebr.tamanio); i++)
+                {
+                    fwrite(&buffer,1,1,archivo);
+                }
+            }
+            fclose(archivo);
+            printf("Se ha eliminado exitosamente la particion logica\n");
+            return 1;
+        }
+        else
+        {
+            printf("Error: el tipo de formato de eliminacion no es el correcto\n");
+            fclose(archivo);
+            return 1;
+        }
+        fclose(archivo);
+        return 1;
+    }
+
+    //de lo contrario se entiende que se encuentra dentro de la lista de ebr
+    inicio=ebr.siguiente;
+
+    if(ebr.siguiente!=0)
+    {
+        while(1==1)
+        {
+
+            fseek(archivo, inicio, SEEK_SET);
+            fread(&ebr, sizeof_ebr, 1, archivo);
+            if(strcmp(ebr.nombre, name)==0 && strcmp(ebr.status, "a")==0)
+            {
+                if(strcmp(delete, "Fast")==0 || strcmp(delete, "Full")==0)
+                {
+                    printf("Se encontro la particion logica a eliminar\n");
+                    strcpy(ebr.status,"i");
+                    fseek(archivo,inicio,SEEK_SET);
+                    fwrite(&ebr, sizeof_ebr, 1, archivo);
+
+                    if(strcmp(delete, "Full")==0)
+                    {
+                        char buffer[1];
+                        int i=0;
+                        fseek(archivo, ebr.comienzo+sizeof_ebr,SEEK_SET);
+
+                        for(i=0; i<(ebr.tamanio); i++)
+                        {
+                            fwrite(&buffer,1,1,archivo);
+                        }
+                    }
+                    fclose(archivo);
+                    printf("Se ha eliminado exitosamente la particion logica\n");
+                    return 1;
+                }
+                else
+                {
+                    printf("Error: el tipo de formato de eliminacion no es el correcto\n");
+                    fclose(archivo);
+                    return 1;
+                }
+
+            }
+            if(ebr.siguiente==0)
+            {
+                printf("No se encontro la particion que se desea eliminar\n");
+                fclose(archivo);
+                return 1;
+            }
+            inicio=ebr.siguiente;
+        }
+    }
+    else
+    {
+        printf("No se encontro la particion que se desea eliminar\n");
+        fclose(archivo);
+        return 1;
+    }
+    fclose(archivo);
+}
+
+int fdisk_add(int add, char *unit, char *path, char *name)
+{
+    struct stat st = {0};
+
+    if (stat(path, &st) == -1){
+        printf("Error: no se encontro el disco\n");
+        return 1;
+    }
+
+    if(fdisk_buscar(path,name)==0){
+        printf("Error: no se encontro la particion deseada\n");
+        return 1;
+    }
+
+
+    //de primero hay que verificar si es que la ruta ingresada es correcta y existe el disco
     if (stat(path, &st) == -1)
     {
         printf("Error: el disco al que se intenta acceder no se encuentra\n");
@@ -382,15 +704,15 @@ int fdisk_add(int add, char unit, char *path, char *name)
     }
 
     int tamanio;
-    if(unit=='B')
+    if(strcmp(unit,"B")==0)
     {
         tamanio=add;
     }
-    else if(unit=='K' || unit=='/0')
+    else if(strcmp(unit,"K")==0 || strcmp(unit,"")==0)
     {
         tamanio=add*1024;
     }
-    else if(unit=='M')
+    else if(strcmp(unit,"M")==0)
     {
         tamanio=add*1024*1024;
     }
@@ -722,7 +1044,8 @@ int fdisk_add(int add, char unit, char *path, char *name)
                 return 1;
             }
             inicio=ebr.siguiente;
-            if(inicio==0){
+            if(inicio==0)
+            {
                 printf("Error: No se encuentra la particion deseada\n");
                 fclose(archivo);
                 return 1;
@@ -933,265 +1256,7 @@ int proximaPosicion(struct MBR mbr, int indice)
 }*/
 
 
-int fdisk_eliminar(char *path, char *name, char *delete)
-{
-    MBR mbr;
-    FILE *archivo;
-    archivo = fopen(path, "rb+");
-    fseek(archivo, 0, SEEK_SET);
-    fread(&mbr, sizeof_mbr, 1, archivo);
 
-    //por si se desea eliminar la particion que ocupa la primera posicion
-    if(strcmp(name,mbr.particion1.nombre)==0 && strcmp(mbr.particion1.status, "a")==0)
-    {
-        if(strcmp(delete, "Fast")==0 || strcmp(delete, "Full")==0)
-        {
-            strcpy(mbr.particion1.status,"i");
-            fseek(archivo,0,SEEK_SET);
-            fwrite(&mbr, sizeof_mbr, 1, archivo);
-
-            if(strcmp(delete, "Full")==0)
-            {
-                char buffer[1];
-                int i=0;
-                fseek(archivo, mbr.particion1.comienzo,SEEK_SET);
-
-                for(i=0; i<(mbr.particion1.tamanio); i++)
-                {
-                    fwrite(&buffer,1,1,archivo);
-                }
-            }
-            fclose(archivo);
-            printf("Se ha eliminado exitosamente la particion\n");
-            return 1;
-        }
-        else
-        {
-            printf("Error: el tipo de formato de eliminacion no es el correcto\n");
-            fclose(archivo);
-            return 1;
-        }
-    }
-
-    //por si se desea eliminar la particion que ocupa la segunda posicion
-    if(strcmp(name,mbr.particion2.nombre)==0 && strcmp(mbr.particion2.status, "a")==0)
-    {
-        if(strcmp(delete, "Fast")==0 || strcmp(delete, "Full")==0)
-        {
-            strcpy(mbr.particion2.status,"i");
-            fseek(archivo,0,SEEK_SET);
-            fwrite(&mbr, sizeof_mbr, 1, archivo);
-
-            if(strcmp(delete, "Full")==0)
-            {
-                char buffer[1];
-                int i=0;
-                fseek(archivo, mbr.particion2.comienzo,SEEK_SET);
-
-                for(i=0; i<(mbr.particion2.tamanio); i++)
-                {
-                    fwrite(&buffer,1,1,archivo);
-                }
-            }
-            fclose(archivo);
-            printf("Se ha eliminado exitosamente la particion\n");
-            return 1;
-        }
-        else
-        {
-            printf("Error: el tipo de formato de eliminacion no es el correcto\n");
-            fclose(archivo);
-            return 1;
-        }
-    }
-
-    //por si se desea eliminar la particion que ocupa la tercera posicion
-    if(strcmp(name,mbr.particion3.nombre)==0 && strcmp(mbr.particion3.status, "a")==0)
-    {
-        if(strcmp(delete, "Fast")==0 || strcmp(delete, "Full")==0)
-        {
-            strcpy(mbr.particion3.status,"i");
-            fseek(archivo,0,SEEK_SET);
-            fwrite(&mbr, sizeof_mbr, 1, archivo);
-
-            if(strcmp(delete, "Full")==0)
-            {
-                char buffer[1];
-                int i=0;
-                fseek(archivo, mbr.particion3.comienzo,SEEK_SET);
-
-                for(i=0; i<(mbr.particion3.tamanio); i++)
-                {
-                    fwrite(&buffer,1,1,archivo);
-                }
-            }
-            fclose(archivo);
-            printf("Se ha eliminado exitosamente la particion\n");
-            return 1;
-        }
-        else
-        {
-            printf("Error: el tipo de formato de eliminacion no es el correcto\n");
-            fclose(archivo);
-            return 1;
-        }
-    }
-
-    //por si se desea eliminar la particion que ocupa la cuarta posicion
-    if(strcmp(name,mbr.particion4.nombre)==0 && strcmp(mbr.particion4.status, "a")==0)
-    {
-        if(strcmp(delete, "Fast")==0 || strcmp(delete, "Full")==0)
-        {
-            strcpy(mbr.particion4.status,"i");
-            fseek(archivo,0,SEEK_SET);
-            fwrite(&mbr, sizeof_mbr, 1, archivo);
-
-            if(strcmp(delete, "Full")==0)
-            {
-                char buffer[1];
-                int i=0;
-                fseek(archivo, mbr.particion4.comienzo,SEEK_SET);
-
-                for(i=0; i<(mbr.particion4.tamanio); i++)
-                {
-                    fwrite(&buffer,1,1,archivo);
-                }
-            }
-            fclose(archivo);
-            printf("Se ha eliminado exitosamente la particion\n");
-            return 1;
-        }
-        else
-        {
-            printf("Error: el tipo de formato de eliminacion no es el correcto\n");
-            fclose(archivo);
-            return 1;
-        }
-    }
-
-    //si no encontro ninguna coincidencia anterior va a buscar si la particion que se desea eliminar es de tipo logica
-    int inicio;
-    if(strcmp(mbr.particion1.tipo, "E")==0)
-    {
-        inicio=mbr.particion1.comienzo;
-    }
-    else if(strcmp(mbr.particion2.tipo, "E")==0)
-    {
-        inicio=mbr.particion2.comienzo;
-    }
-    else if(strcmp(mbr.particion3.tipo, "E")==0)
-    {
-        inicio=mbr.particion3.comienzo;
-    }
-    else if(strcmp(mbr.particion4.tipo, "E")==0)
-    {
-        inicio=mbr.particion4.comienzo;
-    }
-
-    if(inicio==0)
-    {
-        fclose(archivo);
-        printf("Error: No se encontro la particion a eliminar\n");
-        return 1;
-    }
-
-    EBR ebr;
-    fseek(archivo, inicio, SEEK_SET);
-    fread(&ebr, sizeof_ebr, 1, archivo);
-    //si viene al inicio de la lista de ebr
-    if(strcmp(ebr.nombre, name)==0 && strcmp(ebr.status, "a")==0)
-    {
-        printf("Se eliminara la primera particion logica del disco\n");
-        if(strcmp(delete, "Fast")==0 || strcmp(delete, "Full")==0)
-        {
-            strcpy(ebr.status,"i");
-            fseek(archivo, inicio, SEEK_SET);
-            fwrite(&ebr, sizeof_ebr, 1, archivo);
-
-            if(strcmp(delete, "Full")==0)
-            {
-                char buffer[1];
-                int i=0;
-                fseek(archivo, ebr.comienzo+sizeof_ebr,SEEK_SET);
-
-                for(i=0; i<(ebr.tamanio); i++)
-                {
-                    fwrite(&buffer,1,1,archivo);
-                }
-            }
-            fclose(archivo);
-            printf("Se ha eliminado exitosamente la particion logica\n");
-            return 1;
-        }
-        else
-        {
-            printf("Error: el tipo de formato de eliminacion no es el correcto\n");
-            fclose(archivo);
-            return 1;
-        }
-        fclose(archivo);
-        return 1;
-    }
-
-    //de lo contrario se entiende que se encuentra dentro de la lista de ebr
-    inicio=ebr.siguiente;
-
-    if(ebr.siguiente!=0)
-    {
-        while(1==1)
-        {
-
-            fseek(archivo, inicio, SEEK_SET);
-            fread(&ebr, sizeof_ebr, 1, archivo);
-            if(strcmp(ebr.nombre, name)==0 && strcmp(ebr.status, "a")==0)
-            {
-                if(strcmp(delete, "Fast")==0 || strcmp(delete, "Full")==0)
-                {
-                    printf("Se encontro la particion logica a eliminar\n");
-                    strcpy(ebr.status,"i");
-                    fseek(archivo,inicio,SEEK_SET);
-                    fwrite(&ebr, sizeof_ebr, 1, archivo);
-
-                    if(strcmp(delete, "Full")==0)
-                    {
-                        char buffer[1];
-                        int i=0;
-                        fseek(archivo, ebr.comienzo+sizeof_ebr,SEEK_SET);
-
-                        for(i=0; i<(ebr.tamanio); i++)
-                        {
-                            fwrite(&buffer,1,1,archivo);
-                        }
-                    }
-                    fclose(archivo);
-                    printf("Se ha eliminado exitosamente la particion logica\n");
-                    return 1;
-                }
-                else
-                {
-                    printf("Error: el tipo de formato de eliminacion no es el correcto\n");
-                    fclose(archivo);
-                    return 1;
-                }
-
-            }
-            if(ebr.siguiente==0)
-            {
-                printf("No se encontro la particion que se desea eliminar\n");
-                fclose(archivo);
-                return 1;
-            }
-            inicio=ebr.siguiente;
-        }
-    }
-    else
-    {
-        printf("No se encontro la particion que se desea eliminar\n");
-        fclose(archivo);
-        return 1;
-    }
-    fclose(archivo);
-}
 
 
 int fdisk_buscar(char *path, char *name)
@@ -1205,28 +1270,28 @@ int fdisk_buscar(char *path, char *name)
     //por si se desea eliminar la particion que ocupa la primera posicion
     if(strcmp(name,mbr.particion1.nombre)==0 && strcmp(mbr.particion1.status, "a")==0)
     {
-    fclose(archivo);
+        fclose(archivo);
         return 1;
     }
 
     //por si se desea eliminar la particion que ocupa la segunda posicion
     if(strcmp(name,mbr.particion2.nombre)==0 && strcmp(mbr.particion2.status, "a")==0)
     {
-    fclose(archivo);
+        fclose(archivo);
         return 1;
     }
 
     //por si se desea eliminar la particion que ocupa la tercera posicion
     if(strcmp(name,mbr.particion3.nombre)==0 && strcmp(mbr.particion3.status, "a")==0)
     {
-    fclose(archivo);
+        fclose(archivo);
         return 1;
     }
 
     //por si se desea eliminar la particion que ocupa la cuarta posicion
     if(strcmp(name,mbr.particion4.nombre)==0 && strcmp(mbr.particion4.status, "a")==0)
     {
-    fclose(archivo);
+        fclose(archivo);
         return 1;
     }
 
@@ -1278,8 +1343,8 @@ int fdisk_buscar(char *path, char *name)
             if(strcmp(ebr.nombre, name)==0 && strcmp(ebr.status, "a")==0)
             {
 
-                    fclose(archivo);
-                    return 1;
+                fclose(archivo);
+                return 1;
 
             }
             if(ebr.siguiente==0)
